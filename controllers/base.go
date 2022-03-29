@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"log"
 	"net/http"
 	"web-golang/middlewares"
