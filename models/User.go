@@ -33,10 +33,11 @@ func Santize(data string) string {
 	return data
 }
 func (u *User) Prepare() {
-	u.UserId = 0
+	u.UserId += 1
 	u.Username = Santize(u.Username)
-	u.Email = Santize(u.Password)
-
+	u.Email = Santize(u.Email)
+	u.UpdateAt = time.Now()
+	u.CreateAt = time.Now()
 }
 
 func (u *User) Validate(action string) error {
@@ -61,10 +62,13 @@ func (u *User) Validate(action string) error {
 			return errors.New("Required Password")
 		}
 		if u.Email == "" {
-			return errors.New("Required Email")
-		}
-		if err := checkmail.ValidateFormat(u.Email); err != nil {
-			return errors.New("Invalid Email")
+			if u.Username == "" {
+				return errors.New("Required Email or Username")
+			}
+		} else {
+			if err := checkmail.ValidateFormat(u.Email); err != nil {
+				return errors.New("Invalid Email")
+			}
 		}
 		return nil
 
@@ -89,6 +93,7 @@ func (u *User) Validate(action string) error {
 func (u *User) SaveUser(db *gorm.DB) (*User, error) {
 	var err error
 	err = db.Debug().Create(&u).Error
+
 	if err != nil {
 		return &User{}, err
 	}
@@ -102,4 +107,21 @@ func (u *User) FindAllUser(db *gorm.DB) (*[]User, error) {
 		return &[]User{}, err
 	}
 	return &users, nil
+}
+
+func (u *User) FindUserById(Id uint32, db *gorm.DB) (*User, error) {
+	var err error
+	err = db.Debug().Model(&User{}).Where("user_id = ?", Id).Take(&u).Error
+	if err != nil {
+		return &User{}, errors.New("User not found")
+	}
+	return u, nil
+}
+func (u *User) FindUserByUsername(userName string, db *gorm.DB) (*User, error) {
+	var err error
+	err = db.Debug().Model(&User{}).Where("username = ?", userName).Take(&u).Error
+	if err != nil {
+		return &User{}, err
+	}
+	return u, err
 }

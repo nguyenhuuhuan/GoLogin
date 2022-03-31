@@ -6,7 +6,7 @@ import (
 )
 
 func FormatError(err string) error {
-	if strings.Contains(err, "nickname") {
+	if strings.Contains(err, "username") {
 		return errors.New("nickname already taken")
 	}
 	if strings.Contains(err, "email") {

@@ -28,7 +28,7 @@ func (server *Server) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
 	}
-	token, err := server.SignIn(user.Email, user.Password)
+	token, err := server.SignIn(user.Username, user.Email, user.Password)
 	if err != nil {
 		formattedError := formaterror.FormatError(err.Error())
 		response.ERROR(w, http.StatusUnprocessableEntity, formattedError)
@@ -37,12 +37,18 @@ func (server *Server) Login(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, token)
 }
 
-func (server *Server) SignIn(email, password string) (string, error) {
+func (server *Server) SignIn(username, email, password string) (string, error) {
 	var err error
 
 	user := models.User{}
-
-	err = server.DB.Debug().Model(models.User{}).Where("email = ?", email).Take(&user).Error
+	var emailOrUsername string
+	if email == "" {
+		emailOrUsername = username
+		err = server.DB.Debug().Model(models.User{}).Where("username = ?", emailOrUsername).Take(&user).Error
+	} else {
+		emailOrUsername = email
+		err = server.DB.Debug().Model(models.User{}).Where("email = ?", emailOrUsername).Take(&user).Error
+	}
 	if err != nil {
 		return "", err
 	}

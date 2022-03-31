@@ -43,10 +43,10 @@ func (server *Server) initializeRoutes() {
 	server.Router.HandleFunc("/auth/login", middlewares.SetMiddlewareJSON(server.Login)).Methods("POST")
 
 	//User
-	//server.Router.HandleFunc("/user", middlewares.SetMiddlewareJSON(server.Register)).Methods("POST")
+	server.Router.HandleFunc("/auth/register", middlewares.SetMiddlewareJSON(server.Register)).Methods("POST")
 }
 
 func (server *Server) Run(addr string) {
-	fmt.Println("Listening to port 8080")
+	fmt.Println("Listening to port 8000")
 	log.Fatal(http.ListenAndServe(addr, server.Router))
 }
