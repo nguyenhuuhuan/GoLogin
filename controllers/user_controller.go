@@ -18,6 +18,7 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := models.User{}
+	role := models.Roles{}
 	user.Password, err = models.Hash(user.Password)
 	if err != nil {
 		response.ERROR(w, http.StatusInternalServerError, err)
@@ -38,7 +39,12 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-
+	role.Prepare(1, server.DB)
+	_, err = role.CreateRole(server.DB)
+	if err != nil {
+		response.ERROR(w, http.StatusUnprocessableEntity, err)
+		return
+	}
 	userCreate, err := user.SaveUser(server.DB)
 	if err != nil {
 		formatError := formaterror.FormatError(err.Error())
