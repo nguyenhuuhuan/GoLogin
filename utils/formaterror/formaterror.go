@@ -18,5 +18,8 @@ func FormatError(err string) error {
 	if strings.Contains(err, "hashedPassword") {
 		return errors.New("incorrect Password")
 	}
+	if strings.Contains(err, "role_name") {
+		return errors.New("roleName already taken")
+	}
 	return errors.New("incorrect details")
 }

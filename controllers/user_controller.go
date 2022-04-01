@@ -16,9 +16,7 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-
 	user := models.User{}
-	role := models.Roles{}
 	user.Password, err = models.Hash(user.Password)
 	if err != nil {
 		response.ERROR(w, http.StatusInternalServerError, err)
@@ -29,18 +27,25 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	//username, err := user.FindUserByUsername(user.Username, server.DB)
-	//if err == nil {
-	//	response.ERROR(w, http.StatusBadRequest, fmt.Errorf("Username %s is already ", username.Username))
-	//}
-	user.Prepare()
-	err = user.Validate("")
-	if err != nil {
-		response.ERROR(w, http.StatusUnprocessableEntity, err)
+
+	//var roles []models.Roles
+	role := models.Roles{}
+	query := r.URL.Query()
+	roleNames, present := query["roleName"]
+	if !present || len(roleNames) == 0 {
+		response.ERROR(w, http.StatusBadRequest, nil)
 		return
 	}
-	role.Prepare(1, server.DB)
-	_, err = role.CreateRole(server.DB)
+	for _, roleName := range roleNames {
+		_, err := role.FindRoleByRoleName(server.DB, roleName)
+		if err != nil {
+			response.ERROR(w, http.StatusBadRequest, err)
+		}
+		//roles = append(role)
+	}
+	//err := models.AssignRolesToUser(server.DB, &user, roles)
+	user.Prepare()
+	err = user.Validate("")
 	if err != nil {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
 		return

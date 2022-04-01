@@ -12,13 +12,14 @@ import (
 )
 
 type User struct {
-	UserId   uint32    `gorm:"private_key;auto_increment" json:"user_id"`
-	Username string    `gorm:"size:255;not null;unique" json:"username"`
-	Email    string    `gorm:"size:100;not null;unique" json:"email"`
-	Password string    `gorm:"size:100;not null;unique" json:"password"`
-	CreateAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdateAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"update_at"`
-	Roles    []Roles   `gorm:"many2many:user_role" json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
+	gorm.Model
+	UserId   uint32 `gorm:"private_key;auto_increment" json:"user_id"`
+	Username string `gorm:"size:255;not null;unique" json:"username"`
+	Email    string `gorm:"size:100;not null;unique" json:"email"`
+	Status   string `gorm:"size:100;not null;unique" json:"status"`
+	Password string `gorm:"size:100;not null;unique" json:"password"`
+	Role
+	Roles []*Roles `gorm:"many2many:user_role" json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
 }
 
 func Hash(password string) (string, error) {
@@ -45,9 +46,9 @@ func (u *User) Prepare() {
 	u.UserId += 1
 	u.Username = Santize(u.Username)
 	u.Email = Santize(u.Email)
-	u.UpdateAt = time.Now()
-	u.CreateAt = time.Now()
-	//u.Roles = nil
+	u.Status = "Active"
+	//u.CreateAt = time.Now()
+	//u.Roles =
 }
 
 func (u *User) Validate(action string) error {
@@ -113,6 +114,11 @@ func (u *User) SaveUser(db *gorm.DB) (*User, error) {
 
 	return u, nil
 }
+
+//func toUserModules(userId uint32, menu string) User_Role {
+//	s := strings.Split(menu, " ")
+//	p := User_Role{UserId: userId, RoleId: s[0]}
+//}
 func (u *User) FindAllUser(db *gorm.DB) (*[]User, error) {
 	var err error
 	var users []User
@@ -169,4 +175,21 @@ func (u *User) deleteUser(userId uint32, db *gorm.DB) (int64, error) {
 		return 0, db.Error
 	}
 	return db.RowsAffected, nil
+}
+
+func AssignRolesToUser(db *gorm.DB, user *User, roles []*Roles) (err error) {
+	if roles == nil {
+		return nil
+	}
+
+	for _, role := range roles {
+		err := db.Create(&User_Role{
+			UserId: user.UserId,
+			RoleId: role.RoleId,
+		}).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
