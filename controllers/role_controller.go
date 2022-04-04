@@ -38,7 +38,7 @@ func (server *Server) createRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(r.Body)
-	w.Header().Set(" Location", fmt.Sprintf("%s%s/%d", r.Host, r.RequestURI, roleCreate.RoleId))
+	w.Header().Set(" Location", fmt.Sprintf("%s%s/%d", r.Host, r.RequestURI, roleCreate.ID))
 	response.JSON(w, http.StatusCreated, roleCreate)
 
 }

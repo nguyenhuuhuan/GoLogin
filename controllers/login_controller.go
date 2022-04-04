@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"net/http"
@@ -24,15 +23,10 @@ func (server *Server) Login(w http.ResponseWriter, r *http.Request) {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	//user.Prepare()
+	user.Prepare("login")
 	err = user.Validate("login")
 	if err != nil {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
-	}
-	if user.Status != "Active" {
-		//fmt.Errorf("e")
-		response.ERROR(w, http.StatusUnauthorized, errors.New("user wasn't active"))
-		return
 	}
 	token, err := server.SignIn(user.Username, user.Email, user.Password)
 	if err != nil {
@@ -62,5 +56,19 @@ func (server *Server) SignIn(username, email, password string) (string, error) {
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
 		return "", err
 	}
-	return auth.CreateToken(user.UserId)
+	return auth.CreateToken(user.ID)
+}
+func (server *Server) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+
+	// For JWT, log out is easy. Just destroy the cookie
+
+	// see https://golang.org/pkg/net/http/#Cookie
+	// Setting MaxAge<0 means delete cookie now.
+
+	c := http.Cookie{
+		Name:   "token",
+		MaxAge: -1}
+	http.SetCookie(w, &c)
+
+	w.Write([]byte("Old cookie deleted. Logged out!\n"))
 }

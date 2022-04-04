@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"github.com/badoux/checkmail"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
@@ -14,12 +13,12 @@ import (
 
 type User struct {
 	gorm.Model
-	UserId   uint32   `gorm:"private_key;auto_increment" json:"user_id"`
+	//UserId   uint32   `gorm:"column:user_id;private_key;auto_increment" json:"user_id,omitempty"`
 	Username string   `gorm:"size:255;not null;unique" json:"username"`
 	Email    string   `gorm:"size:100;not null;unique" json:"email"`
 	Status   string   `gorm:"size:100;not null;unique" json:"status"`
 	Password string   `gorm:"size:100;not null;unique" json:"password"`
-	Roles    []*Roles `gorm:"many2many:user_role" json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
+	Roles    []*Roles `gorm:"many2many:user_role;" json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
 }
 
 func Hash(password string) (string, error) {
@@ -42,20 +41,30 @@ func Santize(data string) string {
 	data = html.EscapeString(strings.TrimSpace(data))
 	return data
 }
-func (u *User) Prepare(db *gorm.DB, roleNames []string) {
-	u.UserId += 1
-	u.Username = Santize(u.Username)
-	u.Email = Santize(u.Email)
-	u.Status = "Active"
-
-	for _, roleName := range roleNames {
-		role := &Roles{}
-		role, err := role.FindRoleByRoleName(db, roleName)
-		if err != nil {
-			fmt.Errorf(err.Error())
+func (u *User) Prepare(action string) {
+	switch strings.ToLower(action) {
+	case "login":
+		{
+			u.Username = Santize(u.Username)
+			u.Email = Santize(u.Email)
+			u.Status = "Online"
 		}
-		u.Roles = append(u.Roles, role)
+	case "register":
+		{
+			u.Username = Santize(u.Username)
+			u.Email = Santize(u.Email)
+			u.Status = "Offline"
+		}
 	}
+
+	//for _, roleName := range roleNames {
+	//	role := &Roles{}
+	//	role, err := role.FindRoleByRoleName(db, roleName)
+	//	if err != nil {
+	//		fmt.Errorf(err.Error())
+	//	}
+	//	u.Roles = append(u.Roles, role)
+	//}
 }
 
 func (u *User) Validate(action string) error {
@@ -110,10 +119,10 @@ func (u *User) Validate(action string) error {
 
 func (u *User) SaveUser(db *gorm.DB) (*User, error) {
 	var err error
-	err1 := u.BeforeSave()
-	if err1 != nil {
-		log.Fatal(err1)
-	}
+	//err1 := u.BeforeSave()
+	//if err1 != nil {
+	//	log.Fatal(err1)
+	//}
 	err = db.Debug().Create(&u).Error
 	if err != nil {
 		return &User{}, err
@@ -149,7 +158,7 @@ func (u *User) FindUserByUsername(userName string, db *gorm.DB) (*User, error) {
 	return u, err
 }
 
-func (u *User) UpdateUser(userId uint32, db *gorm.DB) (*User, error) {
+func (u *User) UpdateUser(userId uint, db *gorm.DB) (*User, error) {
 	err := u.BeforeSave()
 	if err != nil {
 		log.Fatal(err)

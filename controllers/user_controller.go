@@ -21,7 +21,7 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := models.User{}
-	user.Password, err = models.Hash(user.Password)
+	//user.Password, err = models.Hash(user.Password)
 	if err != nil {
 		response.ERROR(w, http.StatusInternalServerError, err)
 		return
@@ -32,7 +32,7 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var roles []models.Roles
+	//var roles []models.Roles
 
 	query := r.URL.Query()
 	roleNames, present := query["roleName"]
@@ -47,15 +47,9 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 			response.ERROR(w, http.StatusBadRequest, err)
 		}
 		fmt.Println("asd", role.RoleName)
-		roles = append(roles, *role)
+		user.Roles = append(user.Roles, role)
 	}
-	fmt.Println("roles", roles)
-	//err = models.AssignRolesToUser(server.DB, &user, roles)
-	//if err != nil {
-	//	response.ERROR(w, http.StatusInternalServerError, err)
-	//	return
-	//}
-	user.Prepare(server.DB, roleNames)
+	user.Prepare("register")
 	err = user.Validate("")
 	if err != nil {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
@@ -67,11 +61,11 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 		response.ERROR(w, http.StatusUnprocessableEntity, formatError)
 		return
 	}
-	w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.RequestURI, userCreate.UserId))
+	w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.RequestURI, userCreate.ID))
 	response.JSON(w, http.StatusCreated, userCreate)
 }
 
-func (server *Server) updateUser(w http.ResponseWriter, r *http.Request) {
+func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vars := mux.Vars(r)
 	userId, err := strconv.ParseUint(vars["id"], 10, 32)
@@ -95,11 +89,11 @@ func (server *Server) updateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 	}
-	if tokenId != uint32(userId) {
+	if tokenId != uint(userId) {
 		response.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
 		return
 	}
-	updateUser, err := user.UpdateUser(user.UserId, server.DB)
+	updateUser, err := user.UpdateUser(user.ID, server.DB)
 	if err != nil {
 		formatError := formaterror.FormatError(err.Error())
 		response.ERROR(w, http.StatusInternalServerError, formatError)

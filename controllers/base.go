@@ -32,8 +32,9 @@ func (server *Server) Initialize(DbDriver, DbUser, DbPassword, DbPort, DbHost, D
 		}
 	}
 
-	server.DB.Debug().AutoMigrate(&models.User{})
 	server.DB.Debug().AutoMigrate(&models.Roles{})
+	server.DB.Debug().AutoMigrate(&models.User{})
+
 	//server.DB.Debug().AutoMigrate(&models.User_Role{})
 	server.Router = mux.NewRouter()
 	server.initializeRoutes()
@@ -43,10 +44,12 @@ func (server *Server) initializeRoutes() {
 
 	//LoginUser
 	server.Router.HandleFunc("/auth/login", middlewares.SetMiddlewareJSON(server.Login)).Methods("POST")
-
+	server.Router.HandleFunc("/auth/logout", middlewares.SetMiddlewareJSON(server.LogoutHandler)).Methods("GET")
 	//User
 	server.Router.HandleFunc("/auth/register", middlewares.SetMiddlewareJSON(server.Register)).Methods("POST")
+	server.Router.HandleFunc("/user/{UserId}", middlewares.SetMiddlewareAuthentication(server.UpdateUser)).Methods("PUT")
 
+	//Role
 	server.Router.HandleFunc("/role", middlewares.SetMiddlewareJSON(server.createRole)).Methods("POST")
 }
 

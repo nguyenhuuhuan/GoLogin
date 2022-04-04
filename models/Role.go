@@ -9,7 +9,7 @@ import (
 
 type Roles struct {
 	gorm.Model
-	RoleId   uint32  `json:"roleId,omitempty" gorm:"column:role_id;private_key" bson:"_id,omitempty" validate:"max=40"`
+	//RoleId   uint32  `json:"roleId,omitempty" gorm:"column:role_id;private_key;primaryKey" bson:"_id,omitempty" validate:"max=40"`
 	RoleName string  `json:"roleName" gorm:"column:role_name;not null;unique" bson:"role_name,omitempty" validate:"required,max=255"`
 	Status   string  `json:"status,omitempty" gorm:"column:status" bson:"status,omitempty" `
 	Remark   *string `json:"remark,omitempty" gorm:"column:remark" bson:"remark,omitempty" validate:"max=255"`
