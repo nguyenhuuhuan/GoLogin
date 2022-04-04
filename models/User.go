@@ -8,19 +8,20 @@ import (
 	"html"
 	"log"
 	"strings"
-	"time"
 )
 
 type User struct {
 	gorm.Model
-	//UserId   uint32   `gorm:"column:user_id;private_key;auto_increment" json:"user_id,omitempty"`
 	Username string   `gorm:"size:255;not null;unique" json:"username"`
 	Email    string   `gorm:"size:100;not null;unique" json:"email"`
 	Status   string   `gorm:"size:100;not null;unique" json:"status"`
 	Password string   `gorm:"size:100;not null;unique" json:"password"`
-	Roles    []*Roles `gorm:"many2many:user_role;" json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
+	Roles    []*Roles `gorm:"many2many:user_role" json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
 }
 
+//Join Table: user_languages
+//  foreign key: user_id, reference: users.id
+//  foreign key: language_id, reference: languages.id
 func Hash(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err
@@ -57,14 +58,6 @@ func (u *User) Prepare(action string) {
 		}
 	}
 
-	//for _, roleName := range roleNames {
-	//	role := &Roles{}
-	//	role, err := role.FindRoleByRoleName(db, roleName)
-	//	if err != nil {
-	//		fmt.Errorf(err.Error())
-	//	}
-	//	u.Roles = append(u.Roles, role)
-	//}
 }
 
 func (u *User) Validate(action string) error {
@@ -143,7 +136,7 @@ func (u *User) FindAllUser(db *gorm.DB) (*[]User, error) {
 
 func (u *User) FindUserById(Id uint32, db *gorm.DB) (*User, error) {
 	var err error
-	err = db.Debug().Model(&User{}).Where("user_id = ?", Id).Take(&u).Error
+	err = db.Debug().Model(&User{}).Where("id = ?", Id).Take(&u).Error
 	if err != nil {
 		return &User{}, errors.New("User not found")
 	}
@@ -163,20 +156,28 @@ func (u *User) UpdateUser(userId uint, db *gorm.DB) (*User, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db = db.Debug().Model(&User{}).Where("user_id = ?", userId).Take(&User{}).UpdateColumns(
+	//roleNames := u.Roles
+	//for _, roleName := range roleNames {
+	//	role := &Roles{}
+	//	role, err := role.FindRoleByRoleName(db, roleName.RoleName)
+	//	if err != nil {
+	//		return &User{}, err
+	//	}
+	//	u.Roles = append(u.Roles, role)
+	//}
+	db = db.Debug().Model(&User{}).Where("id = ?", userId).Take(&User{}).Updates(
 		map[string]interface{}{
 			"password": u.Password,
 			"username": u.Username,
 			"email":    u.Email,
 			"status":   u.Status,
-			//"update_by": u.
-			"update_at": time.Now(),
+			"roles":    u.Roles,
 		},
 	)
 	if db.Error != nil {
 		return &User{}, db.Error
 	}
-	err = db.Debug().Model(&User{}).Where("user_id = ?", userId).Take(&u).Error
+	err = db.Debug().Model(&User{}).Where("id = ?", userId).Take(&u).Error
 	if err != nil {
 		return &User{}, err
 	}
@@ -184,7 +185,7 @@ func (u *User) UpdateUser(userId uint, db *gorm.DB) (*User, error) {
 }
 
 func (u *User) deleteUser(userId uint32, db *gorm.DB) (int64, error) {
-	db = db.Debug().Model(&User{}).Where("user_id = ?", userId).Delete(&User{})
+	db = db.Debug().Model(&User{}).Where("id = ?", userId).Delete(&User{})
 	if db.Error != nil {
 		return 0, db.Error
 	}

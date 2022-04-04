@@ -65,8 +65,8 @@ func ExtractTokenID(r *http.Request) (uint, error) {
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		uid, err := strconv.ParseUint(fmt.Sprintf("&.0f", claims["user_id"]), 10, 32)
-		if err == nil {
+		uid, err := strconv.ParseUint(fmt.Sprintf("%.0f", claims["ID"]), 10, 32)
+		if err != nil {
 			return 0, err
 		}
 		return uint(uid), nil

@@ -32,8 +32,6 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//var roles []models.Roles
-
 	query := r.URL.Query()
 	roleNames, present := query["roleName"]
 	if !present || len(roleNames) == 0 {
@@ -46,7 +44,6 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			response.ERROR(w, http.StatusBadRequest, err)
 		}
-		fmt.Println("asd", role.RoleName)
 		user.Roles = append(user.Roles, role)
 	}
 	user.Prepare("register")
@@ -68,7 +65,7 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vars := mux.Vars(r)
-	userId, err := strconv.ParseUint(vars["id"], 10, 32)
+	userId, err := strconv.ParseUint(vars["UserId"], 10, 32)
 	if err != nil {
 		response.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -93,10 +90,11 @@ func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		response.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
 		return
 	}
-	updateUser, err := user.UpdateUser(user.ID, server.DB)
+	updateUser, err := user.UpdateUser(uint(userId), server.DB)
 	if err != nil {
-		formatError := formaterror.FormatError(err.Error())
-		response.ERROR(w, http.StatusInternalServerError, formatError)
+		//formatError := formaterror.FormatError(err.Error())
+		response.ERROR(w, http.StatusInternalServerError, err)
+		return
 	}
 	response.JSON(w, http.StatusOK, updateUser)
 }
