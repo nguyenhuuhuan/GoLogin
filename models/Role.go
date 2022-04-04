@@ -46,7 +46,7 @@ func (r *Roles) Prepare(userId uint32, db *gorm.DB) {
 }
 func (r *Roles) FindRoleByRoleName(db *gorm.DB, roleName string) (*Roles, error) {
 	var err error
-	err = db.Debug().Model(&Roles{}).Where("role = ?", roleName).Take(&r).Error()
+	err = db.Debug().Model(&Roles{}).Where("role_name = ?", roleName).Take(&r).Error
 	if err != nil {
 		return &Roles{}, err
 	}

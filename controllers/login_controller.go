@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"net/http"
@@ -23,10 +24,15 @@ func (server *Server) Login(w http.ResponseWriter, r *http.Request) {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	user.Prepare()
+	//user.Prepare()
 	err = user.Validate("login")
 	if err != nil {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
+	}
+	if user.Status != "Active" {
+		//fmt.Errorf("e")
+		response.ERROR(w, http.StatusUnauthorized, errors.New("user wasn't active"))
+		return
 	}
 	token, err := server.SignIn(user.Username, user.Email, user.Password)
 	if err != nil {

@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"github.com/badoux/checkmail"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
@@ -13,13 +14,12 @@ import (
 
 type User struct {
 	gorm.Model
-	UserId   uint32 `gorm:"private_key;auto_increment" json:"user_id"`
-	Username string `gorm:"size:255;not null;unique" json:"username"`
-	Email    string `gorm:"size:100;not null;unique" json:"email"`
-	Status   string `gorm:"size:100;not null;unique" json:"status"`
-	Password string `gorm:"size:100;not null;unique" json:"password"`
-	Role
-	Roles []*Roles `gorm:"many2many:user_role" json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
+	UserId   uint32   `gorm:"private_key;auto_increment" json:"user_id"`
+	Username string   `gorm:"size:255;not null;unique" json:"username"`
+	Email    string   `gorm:"size:100;not null;unique" json:"email"`
+	Status   string   `gorm:"size:100;not null;unique" json:"status"`
+	Password string   `gorm:"size:100;not null;unique" json:"password"`
+	Roles    []*Roles `gorm:"many2many:user_role" json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
 }
 
 func Hash(password string) (string, error) {
@@ -30,7 +30,7 @@ func Hash(password string) (string, error) {
 func CheckPasswordHash(hashedPassword, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
-func (u *User) BeforSave() error {
+func (u *User) BeforeSave() error {
 	hashPassword, err := Hash(u.Password)
 	if err != nil {
 		return err
@@ -42,13 +42,20 @@ func Santize(data string) string {
 	data = html.EscapeString(strings.TrimSpace(data))
 	return data
 }
-func (u *User) Prepare() {
+func (u *User) Prepare(db *gorm.DB, roleNames []string) {
 	u.UserId += 1
 	u.Username = Santize(u.Username)
 	u.Email = Santize(u.Email)
 	u.Status = "Active"
-	//u.CreateAt = time.Now()
-	//u.Roles =
+
+	for _, roleName := range roleNames {
+		role := &Roles{}
+		role, err := role.FindRoleByRoleName(db, roleName)
+		if err != nil {
+			fmt.Errorf(err.Error())
+		}
+		u.Roles = append(u.Roles, role)
+	}
 }
 
 func (u *User) Validate(action string) error {
@@ -103,7 +110,7 @@ func (u *User) Validate(action string) error {
 
 func (u *User) SaveUser(db *gorm.DB) (*User, error) {
 	var err error
-	err1 := u.BeforSave()
+	err1 := u.BeforeSave()
 	if err1 != nil {
 		log.Fatal(err1)
 	}
@@ -115,10 +122,6 @@ func (u *User) SaveUser(db *gorm.DB) (*User, error) {
 	return u, nil
 }
 
-//func toUserModules(userId uint32, menu string) User_Role {
-//	s := strings.Split(menu, " ")
-//	p := User_Role{UserId: userId, RoleId: s[0]}
-//}
 func (u *User) FindAllUser(db *gorm.DB) (*[]User, error) {
 	var err error
 	var users []User
@@ -147,15 +150,17 @@ func (u *User) FindUserByUsername(userName string, db *gorm.DB) (*User, error) {
 }
 
 func (u *User) UpdateUser(userId uint32, db *gorm.DB) (*User, error) {
-	err := u.BeforSave()
+	err := u.BeforeSave()
 	if err != nil {
 		log.Fatal(err)
 	}
 	db = db.Debug().Model(&User{}).Where("user_id = ?", userId).Take(&User{}).UpdateColumns(
 		map[string]interface{}{
-			"password":  u.Password,
-			"username":  u.Username,
-			"email":     u.Email,
+			"password": u.Password,
+			"username": u.Username,
+			"email":    u.Email,
+			"status":   u.Status,
+			//"update_by": u.
 			"update_at": time.Now(),
 		},
 	)
@@ -177,19 +182,19 @@ func (u *User) deleteUser(userId uint32, db *gorm.DB) (int64, error) {
 	return db.RowsAffected, nil
 }
 
-func AssignRolesToUser(db *gorm.DB, user *User, roles []*Roles) (err error) {
-	if roles == nil {
-		return nil
-	}
-
-	for _, role := range roles {
-		err := db.Create(&User_Role{
-			UserId: user.UserId,
-			RoleId: role.RoleId,
-		}).Error
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+//for NO-ORM
+//func AssignRolesToUser(db *gorm.DB, user *User, roles []Roles) (err error) {
+//	if roles == nil {
+//		return nil
+//	}
+//	for _, role := range roles {
+//		err := db.Debug().Create(&User_Role{
+//			UserId: user.UserId,
+//			RoleId: role.RoleId,
+//		}).Error
+//		if err != nil {
+//			return err
+//		}
+//	}
+//	return nil
+//}

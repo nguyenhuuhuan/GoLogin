@@ -33,8 +33,8 @@ func (server *Server) Initialize(DbDriver, DbUser, DbPassword, DbPort, DbHost, D
 	}
 
 	server.DB.Debug().AutoMigrate(&models.User{})
-	server.Router = mux.NewRouter()
 	server.DB.Debug().AutoMigrate(&models.Roles{})
+	//server.DB.Debug().AutoMigrate(&models.User_Role{})
 	server.Router = mux.NewRouter()
 	server.initializeRoutes()
 }
