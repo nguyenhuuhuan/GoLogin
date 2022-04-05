@@ -12,6 +12,13 @@ type Beverage struct {
 	Price        float32 `gorm:"not null;column:price" json:"price"`
 	BeverageType string  `gorm:"not null;column:beverage_type" json:"beverage_type"`
 }
+type CartDTO struct {
+	ID     uint
+	Name   string
+	Amount uint
+	Price  float32
+	Total  float32
+}
 type BeverageType string
 
 const (
@@ -53,6 +60,14 @@ func (b *Beverage) FindAllBeverage(db *gorm.DB) (*[]Beverage, error) {
 	}
 	return &beverages, nil
 }
+func (b *Beverage) FindBeverageById(db *gorm.DB, beverageId uint) (*Beverage, error) {
+	var err error
+	err = db.Debug().Model(&Beverage{}).Where("id = ?", beverageId).Take(&b).Error
+	if err != nil {
+		return &Beverage{}, err
+	}
+	return b, nil
+}
 func (b *Beverage) FindAllBeverageByType(db *gorm.DB, beverageType string) (*[]Beverage, error) {
 	var beverages []Beverage
 	err := db.Debug().Model(&Beverage{}).Where("beverage_type = ?", beverageType).Find(&beverages).Error
@@ -61,10 +76,21 @@ func (b *Beverage) FindAllBeverageByType(db *gorm.DB, beverageType string) (*[]B
 	}
 	return &beverages, nil
 }
-func (b *Beverage) AddBeveragetoCart(db *gorm.DB, beverageId string) (*Beverage, error) {
-	err := db.Debug().Model(&Beverage{}).Where("id = ?", beverageId).Take(&b).Error
-	if err != nil {
-		return &Beverage{}, err
+func (b *Beverage) AddBeverageToCart(db *gorm.DB, cartDTO CartDTO) error {
+	//cartDTO := CartDTO{}
+	maps := map[uint]CartDTO{}
+	_, exist := maps[cartDTO.ID]
+	if !exist {
+		maps[cartDTO.ID] = cartDTO
+	} else {
+		err := db.Debug().Model(&Beverage{}).Where("id = ?", cartDTO.ID).Take(&b).Error
+		if err != nil {
+			return err
+		}
+		if cartDTO.Amount > b.Amount {
+			return errors.New("Out of range")
+		}
+		cartDTO.Amount += 1
 	}
-	return b, nil
+	return nil
 }
