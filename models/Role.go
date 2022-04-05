@@ -15,11 +15,6 @@ type Roles struct {
 	Remark   *string `json:"remark,omitempty" gorm:"column:remark" bson:"remark,omitempty" validate:"max=255"`
 	CreateBy string  `json:"created_by,omitempty" gorm:"column:created_by" bson:"created_by,omitempty"`
 }
-type RoleModule struct {
-	RoleId      string `json:"roleId,omitempty" gorm:"column:roleId" bson:"roleId,omitempty" validate:"required"`
-	ModuleId    string `json:"moduleId,omitempty" gorm:"column:moduleId" bson:"moduleId,omitempty" validate:"required"`
-	Permissions int32  `json:"permissions,omitempty" gorm:"column:permissions" bson:"permissions,omitempty" firestore:"permissions,omitempty" validate:"required"`
-}
 
 func (r *Roles) CreateRole(db *gorm.DB) (*Roles, error) {
 	var err error
@@ -28,7 +23,6 @@ func (r *Roles) CreateRole(db *gorm.DB) (*Roles, error) {
 		return &Roles{}, err
 	}
 	return r, nil
-
 }
 func SantizeRole(data string) string {
 	data = html.EscapeString(strings.TrimSpace(data))

@@ -11,7 +11,7 @@ import (
 	"web-golang/utils/formaterror"
 )
 
-func (server *Server) createRole(w http.ResponseWriter, r *http.Request) {
+func (server *Server) CreateRole(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)

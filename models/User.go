@@ -156,22 +156,12 @@ func (u *User) UpdateUser(userId uint, db *gorm.DB) (*User, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//roleNames := u.Roles
-	//for _, roleName := range roleNames {
-	//	role := &Roles{}
-	//	role, err := role.FindRoleByRoleName(db, roleName.RoleName)
-	//	if err != nil {
-	//		return &User{}, err
-	//	}
-	//	u.Roles = append(u.Roles, role)
-	//}
-	db = db.Debug().Model(&User{}).Where("id = ?", userId).Take(&User{}).Updates(
+	db = db.Debug().Model(&User{}).Where("id = ?", userId).Take(&User{}).UpdateColumns(
 		map[string]interface{}{
 			"password": u.Password,
 			"username": u.Username,
 			"email":    u.Email,
 			"status":   u.Status,
-			"roles":    u.Roles,
 		},
 	)
 	if db.Error != nil {

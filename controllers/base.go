@@ -34,7 +34,7 @@ func (server *Server) Initialize(DbDriver, DbUser, DbPassword, DbPort, DbHost, D
 
 	server.DB.Debug().AutoMigrate(&models.Roles{})
 	server.DB.Debug().AutoMigrate(&models.User{})
-
+	server.DB.Debug().AutoMigrate(&models.Beverage{})
 	//server.DB.Debug().AutoMigrate(&models.User_Role{})
 	server.Router = mux.NewRouter()
 	server.initializeRoutes()
@@ -47,10 +47,16 @@ func (server *Server) initializeRoutes() {
 	server.Router.HandleFunc("/auth/logout", middlewares.SetMiddlewareJSON(server.LogoutHandler)).Methods("GET")
 	//User
 	server.Router.HandleFunc("/auth/register", middlewares.SetMiddlewareJSON(server.Register)).Methods("POST")
-	server.Router.HandleFunc("/user/{UserId}", middlewares.SetMiddlewareAuthentication(server.UpdateUser)).Methods("PUT")
-
+	server.Router.HandleFunc("/user", middlewares.SetMiddlewareJSON(server.GetAllUsers)).Methods("GET")
+	server.Router.HandleFunc("/user/{id}", middlewares.SetMiddlewareJSON(server.GetUser)).Methods("GET")
+	server.Router.HandleFunc("/user/{id}", middlewares.SetMiddlewareAuthentication(server.UpdateUser)).Methods("PUT")
 	//Role
-	server.Router.HandleFunc("/role", middlewares.SetMiddlewareJSON(server.createRole)).Methods("POST")
+	server.Router.HandleFunc("/role", middlewares.SetMiddlewareJSON(server.CreateRole)).Methods("POST")
+
+	//Beverage
+	server.Router.HandleFunc("/beverage", middlewares.SetMiddlewareJSON(server.createBeverage)).Methods("POST")
+	server.Router.HandleFunc("/beverage", middlewares.SetMiddlewareJSON(server.GetAllBeverage)).Methods("GET")
+	server.Router.HandleFunc("/beverage/type", middlewares.SetMiddlewareJSON(server.GetBeveragesByType)).Methods("GET")
 }
 
 func (server *Server) Run(addr string) {

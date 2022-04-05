@@ -21,11 +21,6 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := models.User{}
-	//user.Password, err = models.Hash(user.Password)
-	if err != nil {
-		response.ERROR(w, http.StatusInternalServerError, err)
-		return
-	}
 	err = json.Unmarshal(body, &user)
 	if err != nil {
 		response.ERROR(w, http.StatusUnprocessableEntity, err)
@@ -65,7 +60,7 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vars := mux.Vars(r)
-	userId, err := strconv.ParseUint(vars["UserId"], 10, 32)
+	userId, err := strconv.ParseUint(vars["id"], 10, 32)
 	if err != nil {
 		response.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -97,4 +92,28 @@ func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.JSON(w, http.StatusOK, updateUser)
+}
+func (server *Server) GetUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	uid, err := strconv.ParseUint(vars["id"], 10, 32)
+	if err != nil {
+		response.ERROR(w, http.StatusBadRequest, err)
+		return
+	}
+	user := models.User{}
+	userGotten, err := user.FindUserById(uint32(uid), server.DB)
+	if err != nil {
+		response.ERROR(w, http.StatusBadRequest, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, userGotten)
+}
+func (server *Server) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	user := models.User{}
+	users, err := user.FindAllUser(server.DB)
+	if err != nil {
+		response.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, users)
 }
