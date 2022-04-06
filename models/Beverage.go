@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"github.com/jinzhu/gorm"
 )
 
@@ -76,21 +77,36 @@ func (b *Beverage) FindAllBeverageByType(db *gorm.DB, beverageType string) (*[]B
 	}
 	return &beverages, nil
 }
-func (b *Beverage) AddBeverageToCart(db *gorm.DB, cartDTO CartDTO) error {
-	//cartDTO := CartDTO{}
-	maps := map[uint]CartDTO{}
-	_, exist := maps[cartDTO.ID]
+
+var maps = make(map[uint]*CartDTO)
+
+func (b *Beverage) AddBeverageToCart(db *gorm.DB, cartDTO CartDTO) (*CartDTO, error) {
+	item, exist := maps[cartDTO.ID]
 	if !exist {
-		maps[cartDTO.ID] = cartDTO
+		maps[cartDTO.ID] = &cartDTO
+		return maps[cartDTO.ID], nil
 	} else {
+		fmt.Print("hello")
 		err := db.Debug().Model(&Beverage{}).Where("id = ?", cartDTO.ID).Take(&b).Error
 		if err != nil {
-			return err
+			return &CartDTO{}, err
 		}
-		if cartDTO.Amount > b.Amount {
-			return errors.New("Out of range")
+		if item.Amount > b.Amount {
+			return &CartDTO{}, errors.New("Out of range")
+		} else {
+			fmt.Println("a", item.Amount)
+			item.Amount += 1
+			item.Total = float32(item.Amount) * item.Price
+			return item, nil
 		}
-		cartDTO.Amount += 1
 	}
-	return nil
+	return &CartDTO{}, nil
+}
+
+func (b *Beverage) GetAllCart() interface{} {
+	var items []interface{}
+	for _, value := range maps {
+		items = append(items, value)
+	}
+	return items
 }
