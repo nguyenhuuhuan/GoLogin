@@ -38,7 +38,17 @@ func (server *Server) addBeverageToCart(w http.ResponseWriter, r *http.Request) 
 	}
 	response.JSON(w, http.StatusOK, createItem)
 }
-
+func (server *Server) RemoveItem(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	uid, err := strconv.ParseUint(vars["id"], 10, 32)
+	if err != nil {
+		response.ERROR(w, http.StatusOK, err)
+		return
+	}
+	beverage := models.Beverage{}
+	beverage.RemoveItemCart(uint(uid))
+	response.JSON(w, http.StatusOK, "Item was removed successfully")
+}
 func (server *Server) GetAllCart(w http.ResponseWriter, r *http.Request) {
 	beverage := models.Beverage{}
 	carts := beverage.GetAllCart()
