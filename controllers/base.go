@@ -52,6 +52,7 @@ func (server *Server) initializeRoutes() {
 	server.Router.HandleFunc("/user", middlewares.SetMiddlewareJSON(server.GetAllUsers)).Methods("GET")
 	server.Router.HandleFunc("/user/{id}", middlewares.SetMiddlewareJSON(server.GetUser)).Methods("GET")
 	server.Router.HandleFunc("/user/{id}", middlewares.SetMiddlewareAuthentication(server.UpdateUser)).Methods("PUT")
+
 	//Role
 	server.Router.HandleFunc("/role", middlewares.SetMiddlewareJSON(server.CreateRole)).Methods("POST")
 
@@ -59,12 +60,17 @@ func (server *Server) initializeRoutes() {
 	server.Router.HandleFunc("/beverage", middlewares.SetMiddlewareJSON(server.createBeverage)).Methods("POST")
 	server.Router.HandleFunc("/beverage", middlewares.SetMiddlewareJSON(server.GetAllBeverage)).Methods("GET")
 	server.Router.HandleFunc("/beverage/type", middlewares.SetMiddlewareJSON(server.GetBeveragesByType)).Methods("GET")
+
+	//Cart
 	server.Router.HandleFunc("/beverage/addItem/{id}", middlewares.SetMiddlewareJSON(server.addBeverageToCart)).Methods("GET")
 	server.Router.HandleFunc("/beverage/cart", middlewares.SetMiddlewareJSON(server.GetAllCart)).Methods("GET")
 	server.Router.HandleFunc("/beverage/removeItem/{id}", middlewares.SetMiddlewareJSON(server.RemoveItem)).Methods("GET")
 
 	//Topping
 	server.Router.HandleFunc("/topping", middlewares.SetMiddlewareJSON(server.CreateTopping)).Methods("POST")
+
+	//OrderDetail
+	server.Router.HandleFunc("/orderDetail", middlewares.SetMiddlewareJSON(server.SaveCart)).Methods("GET")
 }
 
 func (server *Server) Run(addr string) {

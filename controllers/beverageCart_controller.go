@@ -46,9 +46,15 @@ func (server *Server) addBeverageToCart(w http.ResponseWriter, r *http.Request) 
 	cartDTO.Amount = 1
 	beverageGotten.Amount = beverageGotten.Amount - cartDTO.Amount
 	priceTopping := models.TotalPriceTopping(server.DB, &cartDTO)
-	cartDTO.Total = float32(cartDTO.Amount)*cartDTO.Price + priceTopping
+	if cartDTO.Size == "M" {
+		cartDTO.Total = float32(cartDTO.Amount)*cartDTO.Price + priceTopping + 5000
+	} else if cartDTO.Size == "L" {
+		cartDTO.Total = float32(cartDTO.Amount)*cartDTO.Price + priceTopping + 7000
+	} else {
+		cartDTO.Total = float32(cartDTO.Amount)*cartDTO.Price + priceTopping
+	}
 
-	createItem, err := beverage.AddBeverageToCart(server.DB, cartDTO)
+	createItem, err := models.AddBeverageToCart(server.DB, cartDTO)
 	if err != nil {
 		response.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -62,12 +68,31 @@ func (server *Server) RemoveItem(w http.ResponseWriter, r *http.Request) {
 		response.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
-	beverage := models.Beverage{}
-	beverage.RemoveItemCart(uint(uid))
+	models.RemoveItemCart(uint(uid))
 	response.JSON(w, http.StatusOK, "Item was removed successfully")
 }
 func (server *Server) GetAllCart(w http.ResponseWriter, r *http.Request) {
-	beverage := models.Beverage{}
-	carts := beverage.GetAllCart()
+	carts := models.GetAllCart()
 	response.JSON(w, http.StatusOK, carts)
+}
+func (server *Server) SaveCart(w http.ResponseWriter, r *http.Request) {
+	//var listOrderDetail []*models.OrderDetail
+	listOrderDetail, err := models.CreateCarts()
+	if err != nil {
+		response.ERROR(w, http.StatusBadRequest, err)
+		return
+	}
+	var listOrdDetail []*models.OrderDetail
+	code := models.RandomString(5)
+
+	for _, ordDetail := range listOrderDetail {
+		ordDetail.Code = code
+		createOrdDetail, err := ordDetail.CreateOrderDetail(server.DB)
+		if err != nil {
+			response.ERROR(w, http.StatusInternalServerError, err)
+			return
+		}
+		listOrdDetail = append(listOrderDetail, createOrdDetail)
+	}
+	response.JSON(w, http.StatusOK, listOrdDetail)
 }

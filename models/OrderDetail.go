@@ -7,12 +7,11 @@ import (
 
 type OrderDetail struct {
 	gorm.Model
-	Code    string `gorm:"not null;unique;column:code" json:"code"`
-	Size    string `gorm:"not null;column:size" json:"size"`
-	Sugar   string `gorm:"not null;column:sugar" json:"sugar"`
-	ColdHot string `gorm:"not null;column:cold_hot" json:"cold_hot"`
-	NameBev string `gorm:"not null;column:name_bev" json:"name_bev"`
-	//NameTop    []string   `gorm:"not null;column:name_top;type:text[]" json:"name_top"`
+	Code       string     `gorm:"not null;column:code" json:"code"`
+	Size       string     `gorm:"not null;column:size" json:"size"`
+	Sugar      string     `gorm:"not null;column:sugar" json:"sugar"`
+	ColdHot    string     `gorm:"not null;column:cold_hot" json:"cold_hot"`
+	NameBev    string     `gorm:"not null;column:name_bev" json:"name_bev"`
 	TotalPrice float32    `gorm:"not null;column:total_price" json:"total_price"`
 	Topping    []*Topping `gorm:"foreignKey:name_topping;references:topping" json:"topping"`
 	Beverage   *Beverage  `gorm:"foreignKey:name;references:name_bev" json:"beverage"`
@@ -28,7 +27,6 @@ func RandomString(n int) string {
 	return string(s)
 }
 func (od *OrderDetail) Prepare() {
-	od.Code = Santize(RandomString(5))
 	od.ColdHot = Santize(od.ColdHot)
 	od.Size = Santize(od.ColdHot)
 	od.Sugar = Santize(od.Sugar)
