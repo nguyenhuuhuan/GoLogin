@@ -14,11 +14,12 @@ type Beverage struct {
 	BeverageType string  `gorm:"not null;column:beverage_type" json:"beverage_type"`
 }
 type CartDTO struct {
-	ID     uint
-	Name   string
-	Amount uint
-	Price  float32
-	Total  float32
+	ID      uint
+	Name    string
+	Amount  uint
+	Price   float32
+	Topping []*Topping
+	Total   float32
 }
 type BeverageType string
 
@@ -86,7 +87,6 @@ func (b *Beverage) AddBeverageToCart(db *gorm.DB, cartDTO CartDTO) (*CartDTO, er
 		maps[cartDTO.ID] = &cartDTO
 		return maps[cartDTO.ID], nil
 	} else {
-		fmt.Print("hello")
 		err := db.Debug().Model(&Beverage{}).Where("id = ?", cartDTO.ID).Take(&b).Error
 		if err != nil {
 			return &CartDTO{}, err
@@ -105,8 +105,8 @@ func (b *Beverage) AddBeverageToCart(db *gorm.DB, cartDTO CartDTO) (*CartDTO, er
 func (b *Beverage) RemoveItemCart(id uint) {
 	delete(maps, id)
 }
-func (b *Beverage) GetAllCart() interface{} {
-	var items []interface{}
+func (b *Beverage) GetAllCart() []*CartDTO {
+	var items []*CartDTO
 	for _, value := range maps {
 		items = append(items, value)
 	}

@@ -14,6 +14,7 @@ type Roles struct {
 	Status   string  `json:"status,omitempty" gorm:"column:status" bson:"status,omitempty" `
 	Remark   *string `json:"remark,omitempty" gorm:"column:remark" bson:"remark,omitempty" validate:"max=255"`
 	CreateBy string  `json:"created_by,omitempty" gorm:"column:created_by" bson:"created_by,omitempty"`
+	Users    []*User `json:"users,omitempty" gorm:"many2many:user_role;column:users"`
 }
 
 func (r *Roles) CreateRole(db *gorm.DB) (*Roles, error) {

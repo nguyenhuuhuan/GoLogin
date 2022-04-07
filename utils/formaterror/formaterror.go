@@ -21,5 +21,8 @@ func FormatError(err string) error {
 	if strings.Contains(err, "role_name") {
 		return errors.New("roleName already taken")
 	}
+	if strings.Contains(err, "name_topping") {
+		return errors.New("Topping name already taken")
+	}
 	return errors.New("incorrect details")
 }

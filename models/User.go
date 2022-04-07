@@ -112,15 +112,10 @@ func (u *User) Validate(action string) error {
 
 func (u *User) SaveUser(db *gorm.DB) (*User, error) {
 	var err error
-	//err1 := u.BeforeSave()
-	//if err1 != nil {
-	//	log.Fatal(err1)
-	//}
 	err = db.Debug().Create(&u).Error
 	if err != nil {
 		return &User{}, err
 	}
-
 	return u, nil
 }
 
@@ -156,13 +151,8 @@ func (u *User) UpdateUser(userId uint, db *gorm.DB) (*User, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//db.Model(&User_Role{}).Where("user_id", userId).Delete(&User_Role{})
-	////err = db.Model(&User_Role{}).Association("roles").Delete(&u).Error
-	////err = db.Preloads("user_role").Delete(&User{}).Error
-	//if err != nil {
-	//	return &User{}, err
-	//}
-	db = db.Debug().Model(&User{}).Where("id = ?", userId).Take(&User{}).Update(
+
+	db = db.Debug().Model(&User{}).Where("id = ?", userId).Take(&User{}).UpdateColumn(
 		map[string]interface{}{
 			"password": u.Password,
 			"username": u.Username,
