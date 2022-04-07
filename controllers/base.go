@@ -35,7 +35,6 @@ func (server *Server) Initialize(DbDriver, DbUser, DbPassword, DbPort, DbHost, D
 	server.DB.Debug().AutoMigrate(&models.Roles{})
 	server.DB.Debug().AutoMigrate(&models.User{})
 	server.DB.Debug().AutoMigrate(&models.Beverage{})
-	//server.DB.Debug().AutoMigrate(&models.User_Role{})
 	server.Router = mux.NewRouter()
 	server.initializeRoutes()
 }
@@ -57,8 +56,9 @@ func (server *Server) initializeRoutes() {
 	server.Router.HandleFunc("/beverage", middlewares.SetMiddlewareJSON(server.createBeverage)).Methods("POST")
 	server.Router.HandleFunc("/beverage", middlewares.SetMiddlewareJSON(server.GetAllBeverage)).Methods("GET")
 	server.Router.HandleFunc("/beverage/type", middlewares.SetMiddlewareJSON(server.GetBeveragesByType)).Methods("GET")
-	server.Router.HandleFunc("/beverage/add/{id}", middlewares.SetMiddlewareJSON(server.addBeverageToCart)).Methods("GET")
+	server.Router.HandleFunc("/beverage/addItem/{id}", middlewares.SetMiddlewareJSON(server.addBeverageToCart)).Methods("GET")
 	server.Router.HandleFunc("/beverage/cart", middlewares.SetMiddlewareJSON(server.GetAllCart)).Methods("GET")
+	server.Router.HandleFunc("/beverage/removeItem/{id}", middlewares.SetMiddlewareJSON(server.RemoveItem)).Methods("GET")
 }
 
 func (server *Server) Run(addr string) {

@@ -40,6 +40,7 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 			response.ERROR(w, http.StatusBadRequest, err)
 		}
 		user.Roles = append(user.Roles, role)
+		//models.AssignRolesToUser(server.DB, *role)
 	}
 	user.Prepare("register")
 	err = user.Validate("")

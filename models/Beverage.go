@@ -91,7 +91,7 @@ func (b *Beverage) AddBeverageToCart(db *gorm.DB, cartDTO CartDTO) (*CartDTO, er
 		if err != nil {
 			return &CartDTO{}, err
 		}
-		if item.Amount > b.Amount {
+		if item.Amount >= b.Amount {
 			return &CartDTO{}, errors.New("Out of range")
 		} else {
 			fmt.Println("a", item.Amount)
@@ -102,7 +102,9 @@ func (b *Beverage) AddBeverageToCart(db *gorm.DB, cartDTO CartDTO) (*CartDTO, er
 	}
 	return &CartDTO{}, nil
 }
-
+func (b *Beverage) RemoveItemCart(id uint) {
+	delete(maps, id)
+}
 func (b *Beverage) GetAllCart() interface{} {
 	var items []interface{}
 	for _, value := range maps {

@@ -16,7 +16,7 @@ type User struct {
 	Email    string   `gorm:"size:100;not null;unique" json:"email"`
 	Status   string   `gorm:"size:100;not null;unique" json:"status"`
 	Password string   `gorm:"size:100;not null;unique" json:"password"`
-	Roles    []*Roles `gorm:"many2many:user_role" json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
+	Roles    []*Roles `gorm:"many2many:user_role;column:roles" json:"roles"`
 }
 
 //Join Table: user_languages
@@ -156,7 +156,13 @@ func (u *User) UpdateUser(userId uint, db *gorm.DB) (*User, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db = db.Debug().Model(&User{}).Where("id = ?", userId).Take(&User{}).UpdateColumns(
+	//db.Model(&User_Role{}).Where("user_id", userId).Delete(&User_Role{})
+	////err = db.Model(&User_Role{}).Association("roles").Delete(&u).Error
+	////err = db.Preloads("user_role").Delete(&User{}).Error
+	//if err != nil {
+	//	return &User{}, err
+	//}
+	db = db.Debug().Model(&User{}).Where("id = ?", userId).Take(&User{}).Update(
 		map[string]interface{}{
 			"password": u.Password,
 			"username": u.Username,
@@ -180,6 +186,14 @@ func (u *User) deleteUser(userId uint32, db *gorm.DB) (int64, error) {
 		return 0, db.Error
 	}
 	return db.RowsAffected, nil
+}
+func AssignRolesToUser(db *gorm.DB, roles Roles) error {
+	var err error
+	err = db.Debug().Model(&User{}).Association("roles").Append([]Roles{roles}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //for NO-ORM
