@@ -12,17 +12,7 @@ type Beverage struct {
 	Price        float32 `gorm:"not null;column:price" json:"price"`
 	BeverageType string  `gorm:"not null;column:beverage_type" json:"beverage_type"`
 }
-type CartDTO struct {
-	ID      uint
-	Name    string
-	Amount  uint
-	Size    string
-	HotCold string
-	Sugar   string
-	Price   float32
-	Topping []*Topping
-	Total   float32
-}
+
 type BeverageType string
 
 const (

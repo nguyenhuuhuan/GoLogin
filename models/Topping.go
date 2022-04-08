@@ -6,7 +6,7 @@ import (
 
 type Topping struct {
 	gorm.Model
-	NameTopping string  `gorm:"size:255;not null;column:name_topping" json:"nameTopping"`
+	NameTopping string  `gorm:"not null;column:name_topping" json:"name_topping"`
 	Amount      uint    `gorm:"not null;column:amount" json:"amount"`
 	Price       float32 `gorm:"not null;column:price" json:"price"`
 }

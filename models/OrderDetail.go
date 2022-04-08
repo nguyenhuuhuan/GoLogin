@@ -7,22 +7,22 @@ import (
 
 type OrderDetail struct {
 	gorm.Model
-	Code       string     `gorm:"not null;column:code" json:"code"`
-	Size       string     `gorm:"not null;column:size" json:"size"`
-	Sugar      string     `gorm:"not null;column:sugar" json:"sugar"`
-	ColdHot    string     `gorm:"not null;column:cold_hot" json:"cold_hot"`
-	NameBev    string     `gorm:"not null;column:name_bev" json:"name_bev"`
-	TotalPrice float32    `gorm:"not null;column:total_price" json:"total_price"`
-	Topping    []*Topping `gorm:"foreignKey:name_topping;references:topping" json:"topping"`
-	Beverage   *Beverage  `gorm:"foreignKey:name;references:name_bev" json:"beverage"`
+	Code          string           `gorm:"not null;column:code" json:"code"`
+	Size          string           `gorm:"not null;column:size" json:"size"`
+	Sugar         string           `gorm:"not null;column:sugar" json:"sugar"`
+	ColdHot       string           `gorm:"not null;column:cold_hot" json:"cold_hot"`
+	NameBev       string           `gorm:"not null;column:name_bev" json:"name_bev"`
+	TotalPrice    float32          `gorm:"not null;column:total_price" json:"total_price"`
+	ToppingDetail []*ToppingDetail `gorm:"foreignKey:topping_detail_id;column:topping_detail" json:"topping_detail"`
+	Beverage      *Beverage        `gorm:"foreignKey:name;references:name_bev" json:"beverage"`
 }
 
-func RandomString(n int) string {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+func RandomString(n int) string {
 	s := make([]rune, n)
 	for i := range s {
-		s[i] = letters[rand.Intn(len(letters))]
+		s[i] = rune(letters[rand.Intn(len(letters))])
 	}
 	return string(s)
 }

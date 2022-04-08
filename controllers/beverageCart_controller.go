@@ -45,7 +45,11 @@ func (server *Server) addBeverageToCart(w http.ResponseWriter, r *http.Request) 
 	cartDTO.Price = beverageGotten.Price
 	cartDTO.Amount = 1
 	beverageGotten.Amount = beverageGotten.Amount - cartDTO.Amount
-	priceTopping := models.TotalPriceTopping(server.DB, &cartDTO)
+	priceTopping, err := models.TotalPriceTopping(server.DB, &cartDTO)
+	if err != nil {
+		response.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
 	if cartDTO.Size == "M" {
 		cartDTO.Total = float32(cartDTO.Amount)*cartDTO.Price + priceTopping + 5000
 	} else if cartDTO.Size == "L" {
@@ -76,7 +80,6 @@ func (server *Server) GetAllCart(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, carts)
 }
 func (server *Server) SaveCart(w http.ResponseWriter, r *http.Request) {
-	//var listOrderDetail []*models.OrderDetail
 	listOrderDetail, err := models.CreateCarts()
 	if err != nil {
 		response.ERROR(w, http.StatusBadRequest, err)
@@ -87,12 +90,16 @@ func (server *Server) SaveCart(w http.ResponseWriter, r *http.Request) {
 
 	for _, ordDetail := range listOrderDetail {
 		ordDetail.Code = code
+		for _, topDetail := range ordDetail.ToppingDetail {
+			topDetail.Code = code
+		}
 		createOrdDetail, err := ordDetail.CreateOrderDetail(server.DB)
 		if err != nil {
 			response.ERROR(w, http.StatusInternalServerError, err)
 			return
 		}
-		listOrdDetail = append(listOrderDetail, createOrdDetail)
+		listOrdDetail = append(listOrdDetail, createOrdDetail)
 	}
+	models.RemoveCart()
 	response.JSON(w, http.StatusOK, listOrdDetail)
 }

@@ -6,6 +6,18 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+type CartDTO struct {
+	ID            uint
+	Name          string
+	Amount        uint
+	Size          string
+	HotCold       string
+	Sugar         string
+	Price         float32
+	ToppingDetail []*ToppingDetail
+	Total         float32
+}
+
 var maps = make(map[uint]*CartDTO)
 
 func AddBeverageToCart(db *gorm.DB, cartDTO CartDTO) (*CartDTO, error) {
@@ -33,6 +45,11 @@ func AddBeverageToCart(db *gorm.DB, cartDTO CartDTO) (*CartDTO, error) {
 func RemoveItemCart(id uint) {
 	delete(maps, id)
 }
+func RemoveCart() {
+	for item := range maps {
+		delete(maps, item)
+	}
+}
 func GetAllCart() []*CartDTO {
 	var items []*CartDTO
 	for _, value := range maps {
@@ -40,21 +57,22 @@ func GetAllCart() []*CartDTO {
 	}
 	return items
 }
-func TotalPriceTopping(db *gorm.DB, cartDTO *CartDTO) float32 {
-	var totalPriceTopping float32
+func TotalPriceTopping(db *gorm.DB, cartDTO *CartDTO) (float32, error) {
+	var totalPriceToppingDetail float32
 	var err error
-	for _, item := range cartDTO.Topping {
+	for _, item := range cartDTO.ToppingDetail {
 		topping := &Topping{}
-		err = db.Debug().Model(&Topping{}).Where("name_topping = ?", item.NameTopping).Take(&topping).Error
-		if err != nil {
-			fmt.Errorf(err.Error())
+		err = db.Debug().Model(&Topping{}).Where("name_topping = ?", item.NameTop).Take(&topping).Error
+		if item.Amount >= topping.Amount {
+			return 0, errors.New("Out of range")
 		}
-		item.ID = topping.ID
-		item.Price = topping.Price
 		total := topping.Price * float32(item.Amount)
-		totalPriceTopping += total
+		totalPriceToppingDetail += total
+		//item.ToppingDetailID = topping.ID
+		topping.Amount = topping.Amount - item.Amount
+		item.TotalPrice = totalPriceToppingDetail
 	}
-	return totalPriceTopping
+	return totalPriceToppingDetail, err
 }
 func CreateCarts() ([]*OrderDetail, error) {
 	var listOrderDetail []*OrderDetail
@@ -63,7 +81,7 @@ func CreateCarts() ([]*OrderDetail, error) {
 		orderDetail.NameBev = ord.Name
 		orderDetail.ColdHot = ord.HotCold
 		orderDetail.Size = ord.Size
-		orderDetail.Topping = ord.Topping
+		orderDetail.ToppingDetail = ord.ToppingDetail
 		orderDetail.TotalPrice = ord.Total
 		listOrderDetail = append(listOrderDetail, orderDetail)
 		if listOrderDetail == nil {
