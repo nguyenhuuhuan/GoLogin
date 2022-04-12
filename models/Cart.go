@@ -70,7 +70,7 @@ func TotalPriceTopping(db *gorm.DB, cartDTO *CartDTO) (float32, error) {
 		totalPriceToppingDetail += total
 		//item.ToppingDetailID = topping.ID
 		topping.Amount = topping.Amount - item.Amount
-		item.TotalPrice = totalPriceToppingDetail
+		item.TotalPrice = total
 	}
 	return totalPriceToppingDetail, err
 }

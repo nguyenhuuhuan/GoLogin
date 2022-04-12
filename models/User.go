@@ -30,7 +30,7 @@ func Hash(password string) (string, error) {
 func CheckPasswordHash(hashedPassword, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
-func (u *User) BeforeSave() error {
+func (u *User) BeforeSave(db *gorm.DB) error {
 	hashPassword, err := Hash(u.Password)
 	if err != nil {
 		return err
@@ -147,12 +147,12 @@ func (u *User) FindUserByUsername(userName string, db *gorm.DB) (*User, error) {
 }
 
 func (u *User) UpdateUser(userId uint, db *gorm.DB) (*User, error) {
-	err := u.BeforeSave()
+	err := u.BeforeSave(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db = db.Debug().Model(&User{}).Where("id = ?", userId).Take(&User{}).UpdateColumn(
+	db = db.Debug().Model(&User{}).Where("id = ?", userId).Take(&User{}).Updates(
 		map[string]interface{}{
 			"password": u.Password,
 			"username": u.Username,
@@ -177,14 +177,15 @@ func (u *User) deleteUser(userId uint32, db *gorm.DB) (int64, error) {
 	}
 	return db.RowsAffected, nil
 }
-func AssignRolesToUser(db *gorm.DB, roles Roles) error {
-	var err error
-	err = db.Debug().Model(&User{}).Association("roles").Append([]Roles{roles}).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
+
+//func AssignRolesToUser(db *gorm.DB, roles Roles) error {
+//	var err error
+//	err = db.Debug().Model(&User{}).Association("roles").Append([]Roles{roles}).Error
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}
 
 //for NO-ORM
 //func AssignRolesToUser(db *gorm.DB, user *User, roles []Roles) (err error) {

@@ -20,7 +20,7 @@ func (t *Topping) CreateTopping(db *gorm.DB) (*Topping, error) {
 	return t, err
 }
 func (t *Topping) UpdateTopping(db *gorm.DB, toppingId uint) (*Topping, error) {
-	db = db.Debug().Model(&Topping{}).Where("id = ?", toppingId).Take(&Topping{}).UpdateColumn(
+	db = db.Debug().Model(&Topping{}).Where("id = ?", toppingId).Take(&Topping{}).UpdateColumns(
 		map[string]interface{}{
 			"name_topping": t.NameTopping,
 			"amount":       t.Amount,
