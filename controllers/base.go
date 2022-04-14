@@ -30,7 +30,7 @@ func openFile(pathFile string) *os.File {
 func (server *Server) Initialize(DbDriver, DbUser, DbPassword, DbPort, DbHost, DbName string) {
 	var err error
 	_ = logger.New(
-		log.New(openFile("/Users/nguyenhuuhuan/Desktop/info.log"), "\r\n", log.LstdFlags), // io writer
+		log.New(openFile("/home/nhhuan/Desktop/info.log"), "\r\n", log.LstdFlags), // io writer
 		logger.Config{
 			SlowThreshold:             time.Second,   // Slow SQL threshold
 			LogLevel:                  logger.Silent, // Log level

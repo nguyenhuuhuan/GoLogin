@@ -45,17 +45,17 @@ func (server *Server) addBeverageToCart(w http.ResponseWriter, r *http.Request) 
 	cartDTO.Price = beverageGotten.Price
 	cartDTO.Amount = 1
 	beverageGotten.Amount = beverageGotten.Amount - cartDTO.Amount
-	priceTopping, err := models.TotalPriceTopping(server.DB, &cartDTO)
+	_, err = models.TotalPriceTopping(server.DB, &cartDTO)
 	if err != nil {
 		response.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
 	if cartDTO.Size == "M" {
-		cartDTO.Total = float32(cartDTO.Amount)*cartDTO.Price + priceTopping + 5000
+		cartDTO.Total = float32(cartDTO.Amount)*cartDTO.Price + 5000
 	} else if cartDTO.Size == "L" {
-		cartDTO.Total = float32(cartDTO.Amount)*cartDTO.Price + priceTopping + 7000
+		cartDTO.Total = float32(cartDTO.Amount)*cartDTO.Price + 7000
 	} else {
-		cartDTO.Total = float32(cartDTO.Amount)*cartDTO.Price + priceTopping
+		cartDTO.Total = float32(cartDTO.Amount) * cartDTO.Price
 	}
 
 	createItem, err := models.AddBeverageToCart(server.DB, cartDTO)
@@ -85,6 +85,7 @@ func (server *Server) SaveCart(w http.ResponseWriter, r *http.Request) {
 		response.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
+	order := &models.Order{}
 	var listOrdDetail []*models.OrderDetail
 	code := models.RandomString(5)
 
@@ -92,13 +93,22 @@ func (server *Server) SaveCart(w http.ResponseWriter, r *http.Request) {
 		ordDetail.Code = code
 		for _, topDetail := range ordDetail.ToppingDetail {
 			topDetail.Code = code
+			order.TotalTopping += topDetail.TotalPrice
 		}
+		order.TotalBeverage += ordDetail.TotalPrice
 		createOrdDetail, err := ordDetail.CreateOrderDetail(server.DB)
 		if err != nil {
 			response.ERROR(w, http.StatusInternalServerError, err)
 			return
 		}
 		listOrdDetail = append(listOrdDetail, createOrdDetail)
+	}
+	order.CodeBill = code
+	order.TotalBill = order.TotalBeverage + order.TotalTopping
+	_, err = order.SaveOrder(server.DB)
+	if err != nil {
+		response.ERROR(w, http.StatusInternalServerError, err)
+		return
 	}
 	models.RemoveCart()
 	response.JSON(w, http.StatusOK, listOrdDetail)

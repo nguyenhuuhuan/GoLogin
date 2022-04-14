@@ -41,3 +41,12 @@ func (od *OrderDetail) CreateOrderDetail(db *gorm.DB) (*OrderDetail, error) {
 	}
 	return od, nil
 }
+func (od *OrderDetail) FindOrderDetailByCode(db *gorm.DB, code string) (*[]OrderDetail, error) {
+	var err error
+	var listOrderDetail []OrderDetail
+	err = db.Debug().Model(&OrderDetail{}).Where("code = ?", code).Take(&listOrderDetail).Error
+	if err != nil {
+		return nil, err
+	}
+	return &listOrderDetail, nil
+}
