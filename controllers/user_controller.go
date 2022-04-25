@@ -118,3 +118,19 @@ func (server *Server) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	response.JSON(w, http.StatusOK, users)
 }
+
+func (server *Server) SearchByUsername(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	searchUser := query.Get("SearchUser")
+	fmt.Println(searchUser)
+	if len(searchUser) == 0 {
+		response.ERROR(w, http.StatusBadRequest, nil)
+		return
+	}
+	user := models.User{}
+	users, err := user.SearchByUsername(searchUser, server.DB)
+	if err != nil {
+		response.ERROR(w, http.StatusInternalServerError, err)
+	}
+	response.JSON(w, http.StatusOK, users)
+}

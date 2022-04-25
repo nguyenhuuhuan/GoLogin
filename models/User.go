@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"github.com/badoux/checkmail"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
@@ -14,7 +15,7 @@ type User struct {
 	gorm.Model
 	Username string   `gorm:"size:255;not null;unique" json:"username"`
 	Email    string   `gorm:"size:100;not null;unique" json:"email"`
-	Status   string   `gorm:"size:100;not null;unique" json:"status"`
+	Status   string   `gorm:"size:100;not null" json:"status"`
 	Password string   `gorm:"size:100;not null;unique" json:"password"`
 	Roles    []*Roles `gorm:"many2many:user_role;column:roles" json:"roles"`
 }
@@ -143,7 +144,7 @@ func (u *User) FindUserByUsername(userName string, db *gorm.DB) (*User, error) {
 	if err != nil {
 		return &User{}, err
 	}
-	return u, err
+	return u, nil
 }
 
 func (u *User) UpdateUser(userId uint, db *gorm.DB) (*User, error) {
@@ -176,6 +177,17 @@ func (u *User) deleteUser(userId uint32, db *gorm.DB) (int64, error) {
 		return 0, db.Error
 	}
 	return db.RowsAffected, nil
+}
+
+func (u *User) SearchByUsername(searchUsername string, db *gorm.DB) (*[]User, error) {
+	var users []User
+	sql := fmt.Sprintf("username LIKE '%%%s%%'", searchUsername)
+	err := db.Debug().Model(&User{}).Where(sql).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return &users, nil
+
 }
 
 //func AssignRolesToUser(db *gorm.DB, roles Roles) error {

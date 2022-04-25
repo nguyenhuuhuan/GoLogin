@@ -70,11 +70,12 @@ func (server *Server) initializeRoutes() {
 	server.Router.HandleFunc("/auth/logout", middlewares.SetMiddlewareJSON(server.LogoutHandler)).Methods("GET")
 
 	//User
-	server.Router.HandleFunc("/user", middlewares.SetMiddlewareJSON(server.GetAllUsers)).Methods("GET")
+	server.Router.HandleFunc("/user/search", middlewares.SetMiddlewareJSON(server.SearchByUsername)).Methods("GET")
+
+	server.Router.HandleFunc("/user/", middlewares.SetMiddlewareJSON(server.GetAllUsers)).Methods("GET")
 	server.Router.HandleFunc("/auth/register", middlewares.SetMiddlewareJSON(server.Register)).Methods("POST")
 	server.Router.HandleFunc("/user/{id}", middlewares.SetMiddlewareJSON(server.GetUser)).Methods("GET")
 	server.Router.HandleFunc("/user/{id}", middlewares.SetMiddlewareAuthentication(server.UpdateUser)).Methods("PUT")
-
 	//Role
 	server.Router.HandleFunc("/role", middlewares.SetMiddlewareJSON(server.CreateRole)).Methods("POST")
 
